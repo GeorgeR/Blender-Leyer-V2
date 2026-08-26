@@ -819,24 +819,48 @@ class BlenderLayer(DockWidget):
             self.statusBar.setText(message)   
         
     def determineBlenderPath(self, dialog = True):
-        if not self.settings.blenderPath:
+        if not self.settings.blenderPath or not os.path.isfile(self.settings.blenderPath):
             try:
-                import shutil
+                import shutil, re
                 p = shutil.which('blender')
                 if p and os.path.isfile(p):
                     self.settings.blenderPath = p
-                    
-                elif os.path.isdir('C:\Program Files\Blender Foundation'):
-                    versions = sorted(os.listdir('C:\Program Files\Blender Foundation'), reverse=True)
-                    for ver in versions:
-                        p = os.path.join('C:\Program Files\Blender Foundation', ver, 'blender.exe')
-                        if os.path.isfile(p):
-                            self.settings.blenderPath = p
-                            break
-            except e:
+                else:
+                    search_roots = [
+                        r'C:\Program Files\Blender Foundation',
+                        r'C:\Program Files (x86)\Blender Foundation',
+                        os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Programs', 'Blender Foundation'),
+                        r'C:\Program Files (x86)\Steam\steamapps\common\Blender',
+                        r'C:\SteamLibrary\steamapps\common\Blender',
+                        r'D:\SteamLibrary\steamapps\common\Blender',
+                        '/Applications/Blender.app/Contents/MacOS',
+                        '/usr/bin',
+                        '/usr/local/bin'
+                    ]
+                    found = []
+                    for root in search_roots:
+                        if not root or not os.path.isdir(root):
+                            continue
+                        direct_exe = os.path.join(root, 'blender.exe' if sys.platform == 'win32' else 'blender')
+                        if os.path.isfile(direct_exe):
+                            found.append((direct_exe, [999]))
+                        try:
+                            for item in os.listdir(root):
+                                sub = os.path.join(root, item)
+                                if os.path.isdir(sub):
+                                    exe = os.path.join(sub, 'blender.exe' if sys.platform == 'win32' else 'blender')
+                                    if os.path.isfile(exe):
+                                        nums = [int(n) for n in re.findall(r'\d+', item)]
+                                        found.append((exe, nums if nums else [0]))
+                        except Exception:
+                            pass
+                    if found:
+                        found.sort(key=lambda x: x[1], reverse=True)
+                        self.settings.blenderPath = found[0][0]
+            except Exception as e:
                 print(e)
             
-            if not self.settings.blenderPath:
+            if not self.settings.blenderPath or not os.path.isfile(self.settings.blenderPath):
                 if dialog:
                     dialog = QFileDialog(self, i18n("Open blender executable"), QStandardPaths.writableLocation(QStandardPaths.ApplicationsLocation))
                     if dialog.exec_() == QDialog.Accepted:
@@ -1320,7 +1344,7 @@ class BlenderLayer(DockWidget):
             name = l.childNodes()[0].name()
             if self.settings.relPath and self.activeInFile:
                 rel = os.path.join(os.path.dirname(self.activeInFile), name)
-                if os.path.os.path.isfile(rel):
+                if os.path.isfile(rel):
                     name = rel
             return name
         return ''
@@ -1466,7 +1490,8 @@ class BlenderLayer(DockWidget):
         
     def readSettings(self):        
         self.settings.blenderPath = instance.readSetting('blender_layer', 'blenderPath', '')
-        self.settings.renderPath = instance.readSetting('blender_layer', 'renderPath', '/tmp/BlenderLayer')
+        default_render_dir = os.path.join(os.path.expanduser('~'), 'BlenderLayer')
+        self.settings.renderPath = instance.readSetting('blender_layer', 'renderPath', default_render_dir)
         self.settings.layerName = instance.readSetting('blender_layer', 'layerName', 'Blender Layer')
         self.settings.relPath = instance.readSetting('blender_layer', 'relPath', 'True') == 'True'
         self.settings.navigateAlt = instance.readSetting('blender_layer', 'navigateAlt', 'True') == 'True'

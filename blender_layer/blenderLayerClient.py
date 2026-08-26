@@ -12,8 +12,8 @@ bl_info = {
     'name': "Connect to Krita (Blender Layer)",
     'author': "Yuntoko",
     'description': "Companion for the 'Blender Layer' Krita plugin",
-    'version': (1, 0),
-    'blender': (2, 80, 0),
+    'version': (1, 2, 0),
+    'blender': (3, 6, 0),
     'category': '3D View',
 }
 client = None
@@ -98,6 +98,11 @@ class BlenderLayerClient():
         self.requestDisconnect = False
 
         print(f"[Blender Layer] Connecting to krita on port {PORT}...")
+        if bpy.app.background:
+            try:
+                gpu.init()
+            except Exception:
+                pass
         try:
             self.connected = True
             self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -312,7 +317,24 @@ class BlenderLayerClient():
             self.sendMessage(('poselib', poselib, clear))
         
     def getPosePreview(self, action):
-        return np.array(action.preview.image_pixels, copy=False).ravel(order = 'F').reshape(128, 128)[::-1,:].ravel().tobytes()
+        p = getattr(action, 'preview', None)
+        if not p:
+            return b''
+        try:
+            w, h = p.image_size[:]
+            if w <= 0 or h <= 0:
+                w, h = 128, 128
+            if hasattr(p, 'image_pixels_float') and len(p.image_pixels_float) > 0:
+                arr = (np.array(p.image_pixels_float, dtype=np.float32).reshape((h, w, 4)) * 255.0).clip(0, 255).astype(np.uint8)
+                arr = arr[::-1, :, :]
+                return np.ascontiguousarray(arr).tobytes()
+            elif hasattr(p, 'image_pixels') and len(p.image_pixels) > 0:
+                arr = np.array(p.image_pixels, dtype=np.int32).view(np.uint8).reshape((h, w, 4))
+                arr = arr[::-1, :, :]
+                return np.ascontiguousarray(arr).tobytes()
+        except Exception as e:
+            print("[Blender Layer] Error generating pose preview:", e)
+        return b''
         
     def sendMessage(self, msg):
         self.sendQueue.put(msg)
@@ -752,15 +774,29 @@ class BlenderLayerClient():
                     y = self.regionY
                     h = self.regionHeight // scale
                     w = self.regionWidth // scale
-                    if len(self.buf) == h and len(self.buf[0]) == w:
-                        b = np.array(self.buf, copy=False, dtype=self.dtype).ravel(order = 'F')
+                    
+                    buf_valid = False
+                    if self.buf is not None:
+                        try:
+                            b = np.array(self.buf, copy=False, dtype=self.dtype)
+                            if b.ndim == 1 and b.size == h * w * 4:
+                                b = b.reshape((h, w, 4))
+                            elif b.ndim == 2 and b.size == h * w * 4:
+                                b = b.reshape((h, w, 4))
+                            if b.ndim == 3 and b.shape[0] == h and b.shape[1] == w and b.shape[2] == 4:
+                                buf_valid = True
+                        except Exception as e:
+                            print("[Blender Layer] Buffer parse error:", e)
+                            buf_valid = False
+
+                    if buf_valid:
+                        # Flip vertically: OpenGL (bottom-to-top) -> Krita (top-to-bottom)
+                        b = b[::-1, :, :]
                         if self.bgrConversion:
-                            b = b.reshape(h, w, 4)[::-1,:,[2, 1, 0, 3]]
-                        else:
-                            b = b.reshape(h, w, 4)[::-1,:,[0, 1, 2, 3]]
+                            b = b[:, :, [2, 1, 0, 3]]
                         if scale != 1:
                             b = b.repeat(scale, axis=0).repeat(scale, axis=1)
-                        b = b.ravel().tobytes()
+                        b = np.ascontiguousarray(b).tobytes()
                         type = 'update'
                         frame = None
                         if self.isAnimation and not self.isRendering:
@@ -778,7 +814,7 @@ class BlenderLayerClient():
                         else:
                             msgs.append((type, x, y, w * scale, h * scale, b, frame))
                     else:
-                        print("[Blender Layer] Warning: Ignorig frame with outdated dimensions")
+                        print("[Blender Layer] Warning: Ignoring frame with outdated dimensions")
 
                 lastType = None
                 while not self.sendQueue.empty():
@@ -814,6 +850,8 @@ class BlenderLayerClient():
             self.requestDisconnect = True
             
     def draw(self, space, region):
+        if not space or not region:
+            return
         try:            
             context = bpy.context
             self.frame = self.frame + 1
@@ -821,8 +859,11 @@ class BlenderLayerClient():
             gizmos = self.gizmos or (space.shading.type == 'RENDERED' and bpy.context.scene.render.engine == 'CYCLES')
              
             if self.connected and not self.isRendering and (self.updateMode == 0 and self.frame % self.framerateScale == 0 or self.updateMode != 0 and self.requestFrame or self.isAnimation and context.scene.frame_current == self.animFrame):
-                if not self.offscreen:
-                    self.offscreen = gpu.types.GPUOffScreen(self.regionWidth // self.scale, self.regionHeight // self.scale, format=self.formatDepth)
+                target_w = max(1, self.regionWidth // self.scale)
+                target_h = max(1, self.regionHeight // self.scale)
+                if not self.offscreen or self.offscreen.width != target_w or self.offscreen.height != target_h:
+                    self.freeOffscreen()
+                    self.offscreen = gpu.types.GPUOffScreen(target_w, target_h, format=self.formatDepth)
                                   
                 space.overlay.show_overlays = gizmos                  
                 vm, pm = self.getMats(context, space)

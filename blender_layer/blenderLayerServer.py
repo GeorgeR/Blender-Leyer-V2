@@ -193,7 +193,8 @@ class BlenderLayerServer(QRunnable):
                                             if msg[5]:
                                                 l.setPixelData(QByteArray(msg[5]), x, y, w, h)
                                             elif shm:
-                                                l.setPixelData(QByteArray(shm.buf.tobytes()), x, y, w, h)
+                                                expected_bytes = bytesPerPixel * w * h
+                                                l.setPixelData(QByteArray(bytes(shm.buf[:expected_bytes])), x, y, w, h)
                                             
                                             if locked:
                                                 refresh = True
