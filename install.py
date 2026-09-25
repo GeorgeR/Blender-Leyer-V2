@@ -1,6 +1,6 @@
 """
-Instalador automático para Blender Layer V2 en Krita
-Compatible con Windows, macOS y Linux
+Automatic installer for Blender Layer V2 in Krita
+Compatible with Windows, macOS, and Linux
 """
 
 import os
@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 def get_krita_pykrita_path():
-    """Detecta la ruta estándar de pykrita según el sistema operativo."""
+    """Find the standard pykrita path for the current operating system."""
     if sys.platform == "win32":
         appdata = os.environ.get("APPDATA")
         if appdata:
@@ -27,11 +27,11 @@ def install():
     dest_dir = get_krita_pykrita_path()
 
     print("========================================================")
-    print("      Instalador de Blender Layer V2 para Krita")
-    print("  Compatible con Blender 5.2.0 LTS y Krita 5.3+")
+    print("      Blender Layer V2 installer for Krita")
+    print("  Compatible with Blender 5.2.0 LTS and Krita 5.3+")
     print("========================================================")
-    print(f"[*] Origen:  {source_dir}")
-    print(f"[*] Destino: {dest_dir}\n")
+    print(f"[*] Source:      {source_dir}")
+    print(f"[*] Destination: {dest_dir}\n")
 
     dest_dir.mkdir(parents=True, exist_ok=True)
 
@@ -40,9 +40,9 @@ def install():
 
     if desktop_src.exists():
         shutil.copy2(desktop_src, dest_dir / "blender_layer.desktop")
-        print(" [OK] Copiado: blender_layer.desktop")
+        print(" [OK] Copied: blender_layer.desktop")
     else:
-        print(" [ERROR] No se encontro blender_layer.desktop")
+        print(" [ERROR] blender_layer.desktop was not found")
         return False
 
     dest_module = dest_dir / "blender_layer"
@@ -50,20 +50,20 @@ def install():
         if dest_module.exists():
             shutil.rmtree(dest_module)
         shutil.copytree(module_src, dest_module)
-        print(" [OK] Copiado: carpeta blender_layer/")
+        print(" [OK] Copied: blender_layer/ folder")
     else:
-        print(" [ERROR] No se encontro la carpeta blender_layer/")
+        print(" [ERROR] blender_layer/ folder was not found")
         return False
 
     print("\n========================================================")
-    print("  Instalacion completada con exito!")
+    print("  Installation completed successfully!")
     print("========================================================")
-    print("\nPasos para activarlo en Krita:")
-    print("  1. Abre o reinicia Krita.")
-    print("  2. Ve a: Ajustes > Configurar Krita... > Gestor de complementos de Python.")
-    print("  3. Activa la casilla: [X] Blender Layer.")
-    print("  4. Haz clic en Aceptar y reinicia Krita.")
-    print("  5. Abre el panel desde: Ajustes > Paneles > Blender Layer.")
+    print("\nTo enable the plugin in Krita:")
+    print("  1. Open or restart Krita.")
+    print("  2. Go to: Settings > Configure Krita... > Python Plugin Manager.")
+    print("  3. Check: [X] Blender Layer.")
+    print("  4. Click OK and restart Krita.")
+    print("  5. Open the docker from: Settings > Dockers > Blender Layer.")
     print("========================================================\n")
     return True
 

@@ -4,66 +4,70 @@
 [![Blender](https://img.shields.io/badge/Blender-5.2%20LTS%20%7C%204.x%20%7C%203.6%2B-orange.svg)](https://blender.org)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-**Blender Layer V2** es un plugin para **Krita** y **Blender** que permite conectar el viewport 3D de Blender directamente sobre una capa de dibujo en Krita en tiempo real. 
+**Blender Layer V2** is a plugin for **Krita** and **Blender** that displays Blender's 3D viewport on a layer in Krita in real time.
 
-Diseñado especialmente para artistas 2D, ilustradores y concept artists que desean utilizar modelos y poses 3D como base y referencia para pintar en Krita.
-
----
-
-## ✨ Novedades en V2 (Compatibilidad con Blender 5.2.0 LTS y Krita 5.3+)
-
-- ✅ **Soporte total para Blender 5.2.0 LTS y Blender 4.x**: Actualizado para la nueva arquitectura gráfica y APIs de viewport de Blender.
-- 🛠️ **Corrección del error de transparencia / lienzo en blanco**: Se solucionó el fallo de aplanamiento de matriz en el canal Alfa (`ravel(order='F')`) que volvía invisibles los modelos 3D en Krita.
-- 📐 **Soporte para Pose Library y Action Previews**: Solucionado el error de desbordamiento en la lectura de previsualizaciones de poses de la biblioteca de assets.
-- ⚡ **Optimización de memoria compartida (Shared Memory)**: Transferencia de píxeles fluida con recorte exacto de búfer.
-- 🔍 **Detección automática en Windows**: Detección inteligente de ejecutables de Blender (versiones LTS, estándar y Steam).
-- 📦 **Instalador de 1 Clic**: Scripts `install.bat` (Windows) e `install.py` (Multiplataforma) incluidos.
+It is designed for 2D artists, illustrators, and concept artists who want to use 3D models and poses as references while painting in Krita.
 
 ---
 
-## 🚀 Instalación Rápida
+## ✨ What's New in V2 (Blender 5.2.0 LTS and Krita 5.3+ Compatibility)
 
-### Opción A (Recomendada): Usar el instalador automático
-1. Descarga o clona este repositorio.
-2. **En Windows**: Haz doble clic en `install.bat`.
-   **En macOS / Linux**: Ejecuta en la terminal `python install.py`.
-3. Abre **Krita** y ve a:
-   `Ajustes` ➔ `Configurar Krita...` ➔ `Gestor de complementos de Python`.
-4. Activa la casilla **[X] Blender Layer**.
-5. Reinicia Krita y abre el panel desde:
-   `Ajustes` ➔ `Paneles` ➔ `Blender Layer`.
+- ✅ **Full support for Blender 5.2.0 LTS and Blender 4.x**: Updated for Blender's new graphics architecture and viewport APIs.
+- 🛠️ **Transparency and blank canvas fix**: Fixed the alpha channel matrix flattening error (`ravel(order='F')`) that made 3D models invisible in Krita.
+- 📐 **Pose Library and Action Preview support**: Fixed an overflow error when reading pose previews from the asset library.
+- ⚡ **Shared memory optimization**: Smooth pixel transfer with precise buffer trimming.
+- 🔍 **Automatic detection on Windows**: Finds Blender executables from LTS, standard, and Steam installations.
+- 📦 **One-click installer**: Includes `install.bat` (Windows) and `install.py` (cross-platform).
 
-### Opción B: Instalación manual
-1. Copia el archivo `blender_layer.desktop` y la carpeta `blender_layer` en la carpeta `pykrita` de tu usuario:
+---
+
+## 🚀 Quick Installation
+
+### Option A (Recommended): Use the automatic installer
+
+1. Download or clone this repository.
+2. **On Windows**: Double-click `install.bat`.
+   **On macOS or Linux**: Run `python install.py` in a terminal.
+3. Open **Krita** and go to:
+   `Settings` ➔ `Configure Krita...` ➔ `Python Plugin Manager`.
+4. Check **[X] Blender Layer**.
+5. Restart Krita and open the panel from:
+   `Settings` ➔ `Dockers` ➔ `Blender Layer`.
+
+### Option B: Install manually
+
+1. Copy `blender_layer.desktop` and the `blender_layer` folder to your user `pykrita` folder:
    - **Windows**: `%APPDATA%\krita\pykrita\`
    - **Linux**: `~/.local/share/krita/pykrita/`
    - **macOS**: `~/Library/Application Support/krita/pykrita/`
-2. Activa el plugin en la configuración de Krita y reinicia.
+2. Enable the plugin in Krita's settings and restart Krita.
 
 ---
 
-## 🎮 Cómo Usar
+## 🎮 How to Use
 
-1. Abre un lienzo en **Krita**.
-2. En el panel lateral de **Blender Layer**, haz clic en **"Start Blender"**.
-3. Blender se abrirá y se conectará automáticamente. Se creará una capa llamada `Blender Layer` en tu lienzo donde verás la previsualización 3D en vivo.
-4. También puedes **arrastrar y soltar cualquier archivo `.blend`** directamente dentro de Krita para abrirlo y conectarlo automáticamente.
+1. Open a canvas in **Krita**.
+2. In the **Blender Layer** docker, click **"Start Blender"**.
+3. Blender will launch and connect automatically. A layer named `Blender Layer` will appear on your canvas with a live 3D preview.
+4. You can also **drag and drop any `.blend` file** into Krita to open and connect it automatically.
 
-### Controles de Navegación
-- **Girar vista 3D**: Arrastra el widget de esfera en el panel o mantén **Alt + Clic Central del Ratón** en el lienzo.
-- **Desplazar (Pan)**: Mantén **Shift** y arrastra en el widget de esfera o **Alt + Ctrl + Clic Central**.
-- **Zoom / Distancia focal**: Usa el control deslizante de distancia focal o **Alt + Shift + Clic Central**.
+### Navigation Controls
 
-### Funciones Adicionales
-- **Modos de Sombreado**: Cambia entre *Wireframe*, *Solid*, *Material Preview* y *Rendered*.
-- **Guías de Perspectiva (Drawing Assistants)**: Haz clic en **"Create Assistant Set"** para generar líneas guía de perspectiva automáticas que coinciden con el ángulo de la cámara 3D.
-- **Biblioteca de Poses**: Selecciona maniquíes (como *Body-chan* / *Body-kun*) y aplica poses de la biblioteca con doble clic.
-- **Renderizado Final y Animación**: Renderiza directamente a la capa de Krita o importa secuencias de fotogramas como animación 2D.
+- **Rotate the 3D view**: Drag the sphere widget in the docker, or hold **Alt + Middle Mouse Button** on the canvas.
+- **Pan**: Hold **Shift** and drag the sphere widget, or use **Alt + Ctrl + Middle Mouse Button**.
+- **Zoom / focal length**: Use the focal length slider, or **Alt + Shift + Middle Mouse Button**.
+
+### Additional Features
+
+- **Shading modes**: Switch between *Wireframe*, *Solid*, *Material Preview*, and *Rendered*.
+- **Perspective guides (Drawing Assistants)**: Click **"Create Assistant Set"** to generate perspective guides matching the 3D camera angle.
+- **Pose Library**: Select mannequins such as *Body-chan* and *Body-kun*, then double-click a pose to apply it.
+- **Final rendering and animation**: Render directly to a Krita layer or import frame sequences as 2D animation.
 
 ---
 
-## 📄 Licencia y Créditos
+## 📄 License and Credits
 
-- **Código base original**: Creado por [Yuntoko](https://github.com/Yuntokon/BlenderLayer) bajo licencia GNU General Public License v3.0 (GPL-3.0).
-- **Mantenimiento y compatibilidad V2**: Actualizado y mantenido por [JovasMotionDesigner](https://github.com/JovasMotionDesigner/Blender-Leyer-V2) para la comunidad de código abierto.
-- **Modelos 3D Body-chan / Body-kun**: [vinchau](https://blendswap.com/blend/23521) (CC-0).
+- **Original codebase**: Created by [Yuntoko](https://github.com/Yuntokon/BlenderLayer) under the GNU General Public License v3.0 (GPL-3.0).
+- **V2 maintenance and compatibility**: Updated and maintained by [JovasMotionDesigner](https://github.com/JovasMotionDesigner/Blender-Leyer-V2) for the open-source community.
+- **Body-chan / Body-kun 3D models**: [vinchau](https://blendswap.com/blend/23521) (CC-0).
